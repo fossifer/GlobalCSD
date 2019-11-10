@@ -3,7 +3,6 @@ import json
 import sqlite3
 from enums import CSDCATS, RMCATCMT, ADDCATCMT
 from sseclient import SSEClient as EventSource
-from time import sleep
 
 conn = sqlite3.connect('pages.db')
 cur = conn.cursor()
@@ -27,7 +26,6 @@ for event in EventSource(url):
                 title = None
                 if add_match:
                     title = next(t for t in add_match.groups() if t)
-                    print('added', change['wiki'], title)
                     cur.execute('''INSERT INTO entry
                         (site, siteurl, title, requester, bot, ts) VALUES
                         (?,?,?,?,?,?)''',
@@ -39,13 +37,13 @@ for event in EventSource(url):
                         (change['wiki'], change['server_url'], title,
                         change['user'], 'add', change['bot'],
                         change['timestamp']))
+                    conn.commit()
                 else:
                     rm_match = rm_title_re.search(change['comment'])
                     title = next(t for t in rm_match.groups() if t)
                     cur.execute("SELECT * FROM entry WHERE title = ?",
                         (title,))
                     if cur.fetchone():
-                        print('removed', change['wiki'], title)
                         cur.execute("DELETE FROM entry WHERE title = ?",
                             (title,))
                         cur.execute('''INSERT INTO log
@@ -54,6 +52,7 @@ for event in EventSource(url):
                         (change['wiki'], change['server_url'], title,
                         change['user'], 'rm', change['bot'],
                         change['timestamp']))
+                        conn.commit()
 
             elif change['type'] == 'log':
                 if change['log_type'] != 'delete':
@@ -61,7 +60,6 @@ for event in EventSource(url):
                 cur.execute("SELECT * FROM entry WHERE title = ?",
                     (change['title'],))
                 if cur.fetchone():
-                    print('deleted', change['wiki'], change['title'])
                     cur.execute("DELETE FROM entry WHERE title = ?", (title,))
                     cur.execute('''INSERT INTO log
                         (site, siteurl, title, user, type, bot, ts) VALUES
@@ -69,6 +67,7 @@ for event in EventSource(url):
                     (change['wiki'], change['server_url'], change['title'],
                     change['user'], 'del', change['bot'],
                     change['timestamp']))
+                    conn.commit()
         except (ValueError, KeyError):
             # change parse error
             pass
