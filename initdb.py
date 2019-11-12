@@ -15,6 +15,11 @@ c.execute('''CREATE TABLE log
             (id integer primary key, site text, siteurl text, title text,
              user text, type text check( type in ('add', 'rm', 'del') ),
              bot integer, ts integer)''')
+# admin table includes admin info for each wiki, they are
+# sysop list and last action time.
+c.execute('''CREATE TABLE admin
+            (id integer primary key, site text, userid integer, username text,
+             expiry integer, action integer)''')
 
 conn.commit()
 conn.close()
