@@ -13,6 +13,11 @@ add_title_re = re.compile(r'|'.join([s.replace('[[:$1]]', r'\[\[:(.+)\]\]')
 rm_title_re = re.compile(r'|'.join([s.replace('[[:$1]]', r'\[\[:(.+)\]\]')
     for s in RMCATCMT.values()]))
 
+# load admin list to memory
+cur.execute('''SELECT site, GROUP_CONCAT(username, '|') FROM admin
+    GROUP BY site''')
+all_admins = {wiki: users.split('|') for (wiki, users) in cur.fetchall()}
+
 url = 'https://stream.wikimedia.org/v2/stream/recentchange'
 for event in EventSource(url):
     if event.event == 'message':
