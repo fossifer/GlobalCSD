@@ -24,6 +24,27 @@ for event in EventSource(url):
         try:
             change = json.loads(event.data)
 
+            if change['user'] in all_admins.get(change['wiki'], []):
+                # check admin expiry
+                cur.execute('''SELECT expiry FROM admin
+                    WHERE site = ? AND username = ?''',
+                    (change['wiki'], change['user']))
+                expiry = cur.fetchone()
+                if expiry and expiry < change['timestamp']:
+                    cur.execute('''DELETE FROM admin
+                        WHERE site = ? AND username = ?''',
+                        (change['wiki'], change['user']))
+                    all_admins[change['wiki']] = [
+                        a for a in all_admins[change['wiki']]
+                        if a != change['user']]
+                else:
+                    # update admin action time
+                    cur.execute('''UPDATE admin
+                        SET action = ?
+                        WHERE site = ? AND username = ?''',
+                        (change['timestamp'], change['wiki'], change['user']))
+                conn.commit()
+
             if change['type'] == 'categorize':
                 if change['title'] != CSDCATS.get(change['wiki']):
                     continue
