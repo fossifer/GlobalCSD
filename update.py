@@ -12,6 +12,8 @@ add_title_re = re.compile(r'|'.join([s.replace('[[:$1]]', r'\[\[:(.+)\]\]')
     for s in ADDCATCMT.values()]))
 rm_title_re = re.compile(r'|'.join([s.replace('[[:$1]]', r'\[\[:(.+)\]\]')
     for s in RMCATCMT.values()]))
+# 4::oldgroups, 5::newgroups
+rights_para_re = re.compile(r'4::(.*), 5::(.*)')
 
 # load admin list to memory
 cur.execute('''SELECT site, GROUP_CONCAT(username, '|') FROM admin
@@ -81,7 +83,10 @@ for event in EventSource(url):
                         conn.commit()
 
             elif change['type'] == 'log':
-                if change['log_type'] != 'delete':
+                if change['log_type'] == 'rights':
+                    
+                    continue
+                elif change['log_type'] != 'delete' or change['log_action'] != 'delete':
                     continue
                 cur.execute("SELECT * FROM entry WHERE title = ?",
                     (change['title'],))
