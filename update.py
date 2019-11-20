@@ -62,6 +62,7 @@ for event in EventSource(url):
                 conn.commit()
 
             if change['type'] == 'categorize':
+                # check addition to/removal from CSD category
                 if change['title'] != CSDCATS.get(change['wiki']):
                     continue
                 add_match = add_title_re.search(change['comment'])
@@ -98,6 +99,7 @@ for event in EventSource(url):
 
             elif change['type'] == 'log':
                 if change['log_type'] == 'rights':
+                    # update admin list
                     params = unserialize(bytes(change['log_params']))
                     user, wiki = change['log_title'], change['wiki']
                     if '@' in user:
@@ -153,6 +155,7 @@ for event in EventSource(url):
                     continue
                 elif change['log_type'] != 'delete' or change['log_action'] != 'delete':
                     continue
+                # check deletion of speedy candidates
                 cur.execute("SELECT * FROM entry WHERE title = ?",
                     (change['title'],))
                 if cur.fetchone():
