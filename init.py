@@ -53,4 +53,3 @@ for wiki in CSDCATS.keys():
         local_cur.executemany('''INSERT INTO admin
             (site, userid, username, expiry, action) VALUES (?,?,?,?,?)''',
             rst)
-        
