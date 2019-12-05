@@ -74,6 +74,7 @@ if args.enum:
 
 
 if args.sdentry:
+    import sqlite3
     import toolforge
     from enums import CSDCATS
     from datetime import datetime as dt
