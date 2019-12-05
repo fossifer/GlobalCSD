@@ -25,13 +25,15 @@ for wiki in wikis:
             FROM user_groups JOIN user ON ug_user = user_id
             WHERE ug_group LIKE "%sysop%";''')
         admins = cur.fetchall()
+        print(len(admins), 'admins')
+        if not admins:
+            continue
         admin_ids = tuple(a[0] for a in admins)
         cur.execute('''SELECT actor_id FROM actor WHERE actor_user
             IN (%s)''' % ','.join(['%s'] * len(admins)), admin_ids)
         actor_ids = cur.fetchall()
         actor_ids = tuple(a[0] for a in actor_ids)
         admins_d = {actor_ids[i]: admins[i] for i in range(len(admins))}
-        print(len(actor_ids), 'admins')
         cur.execute('''SELECT rev_actor, UNIX_TIMESTAMP(MAX(rev_timestamp))
             FROM revision_userindex WHERE rev_actor
             IN (%s) GROUP BY rev_actor''' % ','.join(['%s'] * len(admins)),
