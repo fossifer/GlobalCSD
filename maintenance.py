@@ -122,7 +122,7 @@ if args.sdentry:
                 title.decode('utf-8').replace('_', ' '), rev]
                 for (pageid, ns, title, rev) in pages}
             cur.execute('''SELECT rev_page, comment_text,
-                rev_timestamp, actor_name FROM revision
+                UNIX_TIMESTAMP(rev_timestamp), actor_name FROM revision
                 JOIN comment ON rev_comment_id = comment_id
                 JOIN actor ON rev_actor = actor_id
                 WHERE rev_id IN (%s)''' % ','.join(['%s'] * len(pagesdict)),
@@ -130,7 +130,7 @@ if args.sdentry:
             revs = cur.fetchall()
             for rev in revs:
                 pagesdict[rev[0]].extend([rev[1].decode('utf-8'),
-                    rev[2], rev[3].decode('utf-8')])
+                    dt.utcfromtimestamp(rev[2]), rev[3].decode('utf-8')])
             local_cur.execute('''SELECT title FROM showcsd_sdentry
                 JOIN showcsd_wiki ON site_id = showcsd_wiki.id
                 WHERE name = ?''', (wiki,))
